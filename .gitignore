@@ -23,6 +23,4 @@ dbdir/
 # Go workspace file
 go.work
 
-# Ignore go module files
-go.mod
-go.sum
+
