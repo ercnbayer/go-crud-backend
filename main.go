@@ -53,14 +53,6 @@ func DeletePerson(person *Person, db *gorm.DB) (*Person, error) {
 	return person, nil
 }
 
-func UpdatePerson(person *Person, db *gorm.DB) {
-
-	db.Save(person) // where condition istiyor id e göre hareket etmiyor
-
-	fmt.Println("updated:", person)
-
-}
-
 func ReadPerson(person *Person, db *gorm.DB) (*Person, error) {
 
 	if err := db.First(person).Error; err != nil {
@@ -78,7 +70,7 @@ func ReadPerson(person *Person, db *gorm.DB) (*Person, error) {
 
 func PatchUpdatePerson(person *Person, db *gorm.DB) (*Person, error) {
 
-	if err := db.First(person).Error; err != nil {
+	if err := db.First(person).Error; err != nil { // if id does not exist
 		return nil, err
 	}
 
@@ -92,9 +84,9 @@ func PatchUpdatePerson(person *Person, db *gorm.DB) (*Person, error) {
 }
 
 func ReturnAllQueries(db *gorm.DB) ([]Person, error) {
-	var people []Person
+	var people []Person // creating person arr
 	if err := db.Find(&people).Error; err != nil {
-
+		//check if err
 		return nil, err
 	}
 
@@ -103,7 +95,7 @@ func ReturnAllQueries(db *gorm.DB) ([]Person, error) {
 
 func listUsers(c *fiber.Ctx) error {
 
-	people, err := ReturnAllQueries(db)
+	people, err := ReturnAllQueries(db) //list api
 
 	if err != nil {
 		return c.JSON(err)
@@ -114,27 +106,29 @@ func listUsers(c *fiber.Ctx) error {
 
 func getSingleUser(c *fiber.Ctx) error {
 
-	// Get the ID from the URL parameter
-	id := c.Params("id")
+	//getting single user
 
-	person := &Person{ID: id}
+	// Get the ID from the URL parameter
+	id := c.Params("id") // getting id from params
+
+	person := &Person{ID: id} // person instance
 
 	person, err := ReadPerson(person, db)
-	if err != nil {
+	if err != nil { //check if err is not null
 		return c.JSON(err.Error())
 	}
 
-	return c.JSON(person)
+	return c.JSON(person) // return it as json
 
 }
 
 func deleteUser(c *fiber.Ctx) error {
 
-	id := c.Params("id")
+	id := c.Params("id") // getting id from params
 
 	person := &Person{ID: id}
 
-	person, err := DeletePerson(person, db)
+	person, err := DeletePerson(person, db) // for delete api
 
 	if err != nil {
 		return c.JSON(err.Error())
@@ -146,11 +140,11 @@ func deleteUser(c *fiber.Ctx) error {
 
 func updateUser(c *fiber.Ctx) error {
 
-	id := c.Params("id")
+	id := c.Params("id") // getting id again
 
-	person := &Person{ID: id}
+	person := &Person{ID: id} // creating instance
 
-	if err := c.BodyParser(person); err != nil {
+	if err := c.BodyParser(person); err != nil { // check if err
 		fmt.Println("error = ", err)
 		return c.SendStatus(404)
 	}
@@ -168,9 +162,9 @@ func createUser(c *fiber.Ctx) error {
 
 	person := new(Person)
 
-	if err := c.BodyParser(person); err != nil {
+	if err := c.BodyParser(person); err != nil { //check if err
 		fmt.Println("error = ", err)
-		return c.SendStatus(200)
+		return c.SendStatus(404)
 	}
 
 	person, err := InsertPerson(person, db)
@@ -185,15 +179,14 @@ func createUser(c *fiber.Ctx) error {
 
 func main() {
 
-	app := fiber.New()
+	app := fiber.New() // fiber inst
 
-	err := godotenv.Load()
+	err := godotenv.Load() //load env
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	dbName := os.Getenv("POSTGRES_DB")
-
+	dbName := os.Getenv("POSTGRES_DB") // getting env vars
 	userName := os.Getenv("POSTGRES_USER")
 	dbPassword := os.Getenv("POSTGRES_PASSWORD")
 	dbPort := os.Getenv("PORT")
@@ -202,24 +195,23 @@ func main() {
 
 	fmt.Println(dsn)
 
-	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{}) //connecting gorm
 
-	if err != nil {
+	if err != nil { //check if err
 		log.Fatal(err)
 	}
 
-	userApi := app.Group("/user")
+	userApi := app.Group("/user") // grouping rotues
 
-	userApi.Post("/", createUser)
+	userApi.Post("/", createUser) // creating user
 
-	// getting user if no error
-	userApi.Get(":id", getSingleUser)
+	userApi.Get(":id", getSingleUser) // get single user
 
-	userApi.Get("/", listUsers)
+	userApi.Get("/", listUsers) //list all users
 
-	userApi.Patch(":id", updateUser)
+	userApi.Patch(":id", updateUser) //update user
 
-	userApi.Delete(":id", deleteUser)
+	userApi.Delete(":id", deleteUser) //delete user
 
 	log.Fatal(app.Listen(":3000"))
 

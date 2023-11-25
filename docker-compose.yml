@@ -10,13 +10,4 @@ services:
       - "6000:5432"
     volumes:
       - ./dbdir:/db
-    #command:  bash -c " cd  db  &&  pg_restore -U postgres -d people db.dump"
-
- # api:
-  #  build: ./
-  #  command: ["./wait-for-it.sh", "db:6000", "--", "go", "run", "main.go"]
-  #  volumes:
-   #   - .:/api  # This might need to be adjusted based on your project structure
-   # ports:
-    #  - "5000:3080"
-    #depends_on:
+  
