@@ -11,8 +11,6 @@
 =======
 dbdir/
 .env
-go.mod
-go.sum
 # Test binary, built with `go test -c`
 *.test
 
@@ -24,3 +22,7 @@ go.sum
 
 # Go workspace file
 go.work
+
+# Ignore go module files
+go.mod
+go.sum
