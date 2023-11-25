@@ -7,7 +7,12 @@
 *.dll
 *.so
 *.dylib
+<<<<<<< HEAD
 
+=======
+dbdir/
+.env
+>>>>>>> 703c7a8 (init)
 # Test binary, built with `go test -c`
 *.test
 

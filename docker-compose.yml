@@ -1,0 +1,22 @@
+version: '3.3'
+services:
+  db:
+    image: postgres:15.4
+    environment:
+      POSTGRES_DB: $POSTGRES_DB
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD  # Replace with your desired password
+    ports:
+      - "6000:5432"
+    volumes:
+      - ./dbdir:/db
+    #command:  bash -c " cd  db  &&  pg_restore -U postgres -d people db.dump"
+
+ # api:
+  #  build: ./
+  #  command: ["./wait-for-it.sh", "db:6000", "--", "go", "run", "main.go"]
+  #  volumes:
+   #   - .:/api  # This might need to be adjusted based on your project structure
+   # ports:
+    #  - "5000:3080"
+    #depends_on:
