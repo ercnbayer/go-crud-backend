@@ -8,7 +8,7 @@ import (
 
 func main() {
 
-	err := config.Init(1) //LOG LEVEL
+	err := config.Init(3) //LOG LEVEL
 
 	if err == nil {
 

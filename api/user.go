@@ -14,11 +14,6 @@ func getSingleUser(c *fiber.Ctx) error {
 	// Get the ID from the URL parameter
 	id := c.Params("id") // getting id from params
 
-	if err := c.BodyParser(id); err != nil { // check if err
-		logger.Error("GET SINGLE USER error = ", err)
-		return c.SendStatus(404)
-	}
-
 	person := &db.Person{ID: id} // person instance
 
 	person, err := db.ReadPerson(person, db.Db)
@@ -38,7 +33,7 @@ func deleteUser(c *fiber.Ctx) error {
 
 	person := &db.Person{ID: id}
 
-	person, err := db.InsertPerson(person, db.Db) // for delete api
+	person, err := db.DeletePerson(person, db.Db) // for delete api
 
 	if err != nil {
 		return c.JSON(err.Error())
@@ -52,13 +47,15 @@ func updateUser(c *fiber.Ctx) error {
 
 	id := c.Params("id") // getting id again
 
-	person := &db.Person{ID: id} // creating instance
+	person := new(db.Person) // creating instance
 
 	if err := c.BodyParser(person); err != nil { // check if err
-		logger.Error("error = ", err)
+
+		logger.Error("UPDATE USER error = ", err, person)
+
 		return c.SendStatus(404)
 	}
-
+	person.ID = id
 	person, err := db.PatchUpdatePerson(person, db.Db)
 
 	if err != nil {

@@ -62,16 +62,19 @@ func ReadPerson(person *Person, db *gorm.DB) (*Person, error) {
 
 func PatchUpdatePerson(person *Person, db *gorm.DB) (*Person, error) {
 
-	if err := db.First(person).Error; err != nil { // if id does not exist
+	existingPerson := &Person{ID: person.ID}
+
+	if err := db.Find(existingPerson).Error; err != nil { // if id does not exist
 		return nil, err
 	}
 
-	if err := db.Model(person).Updates(person).Error; err != nil {
+	if err := db.Model(existingPerson).Updates(person).Error; err != nil {
+		logger.Error("err update")
 		return nil, err
 	}
 
 	// Return the updated person
-	return person, nil
+	return existingPerson, nil
 
 }
 
