@@ -3,8 +3,7 @@ package api
 import (
 	db "go-backend/db"
 	"go-backend/logger"
-
-	"github.com/google/uuid"
+	"go-backend/validator"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -18,7 +17,7 @@ func getSingleUser(c *fiber.Ctx) error {
 
 	var person = new(db.Person)
 	person.ID = id
-	_, err := uuid.Parse(id)
+	_, err := validator.ValidateID(id)
 
 	if err != nil {
 
@@ -41,7 +40,7 @@ func deleteUser(c *fiber.Ctx) error {
 
 	id := c.Params("id") // getting id from params
 
-	_, err := uuid.Parse(id)
+	_, err := validator.ValidateID(id)
 
 	if err != nil {
 
@@ -65,16 +64,21 @@ func updateUser(c *fiber.Ctx) error {
 
 	id := c.Params("id") // getting id again
 
+	_, err := validator.ValidateID(id)
+
+	if err != nil {
+		return c.JSON(c.SendStatus(400), err.Error())
+	}
 	person := new(db.Person) // creating instance
 
 	if err := c.BodyParser(person); err != nil { // check if err
 
 		logger.Error("UPDATE USER error = ", err, person)
 
-		return c.JSON(c.SendStatus(404), err.Error())
+		return c.JSON(c.SendStatus(400), err.Error())
 	}
 	person.ID = id
-	person, err := db.PatchUpdatePerson(person)
+	person, err = db.PatchUpdatePerson(person)
 
 	if err != nil {
 		return c.JSON(c.SendStatus(404), "USER NOT FOUND")

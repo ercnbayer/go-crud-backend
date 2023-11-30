@@ -2,8 +2,7 @@ package db
 
 import (
 	"go-backend/logger"
-
-	"github.com/go-playground/validator/v10"
+	"go-backend/validator"
 )
 
 type Person struct {
@@ -13,8 +12,6 @@ type Person struct {
 	Email    string `gorm:"column:email ;not null" validate:"required"`
 }
 
-var Validator = validator.New()
-
 // TableName overrides the table name used by User to `profiles`
 func (table *Person) TableName() string {
 	return "persons"
@@ -22,7 +19,7 @@ func (table *Person) TableName() string {
 
 func InsertPerson(person *Person) (*Person, error) {
 
-	if err := Validator.Struct(person); err != nil {
+	if err := validator.Validator.Struct(person); err != nil {
 
 		return nil, err
 	}
