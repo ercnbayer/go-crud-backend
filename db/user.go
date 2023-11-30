@@ -3,26 +3,31 @@ package db
 import (
 	"go-backend/logger"
 
-	"gorm.io/gorm"
+	"github.com/go-playground/validator/v10"
 )
-
-var Db *gorm.DB
 
 type Person struct {
 	ID       string `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
-	Name     string `gorm:"name"`
-	Password string `gorm:"column:password"`
-	Email    string `gorm:"column:email"`
+	Name     string `gorm:"name;not null" validate:"required"`
+	Password string `gorm:"column:password;not null" validate:"required"`
+	Email    string `gorm:"column:email ;not null" validate:"required"`
 }
+
+var Validator = validator.New()
 
 // TableName overrides the table name used by User to `profiles`
 func (table *Person) TableName() string {
 	return "persons"
 }
 
-func InsertPerson(person *Person, db *gorm.DB) (*Person, error) {
+func InsertPerson(person *Person) (*Person, error) {
 
-	if err := db.Save(&person).Error; err != nil {
+	if err := Validator.Struct(person); err != nil {
+
+		return nil, err
+	}
+
+	if err := Db.Save(&person).Error; err != nil {
 		return nil, err
 	}
 
@@ -32,45 +37,50 @@ func InsertPerson(person *Person, db *gorm.DB) (*Person, error) {
 
 }
 
-func DeletePerson(person *Person, db *gorm.DB) (*Person, error) {
+func DeletePerson(id string) (string, error) {
 
-	if err := db.First(person).Error; err != nil {
+	if err := Db.First(&Person{ID: id}).Error; err != nil {
+		return id, err
+	}
+
+	if err := Db.Delete(&Person{ID: id}).Error; err != nil {
+
+		return id, err
+
+	}
+
+	return id, nil
+}
+
+func ReadPerson(id string) (*Person, error) {
+
+	if err := Db.First(&Person{ID: id}).Error; err != nil {
 		return nil, err
 	}
 
-	if err := db.Delete(&person).Error; err != nil {
+	var person = new(Person)
+	person.ID = id
 
+	if err := Db.Find(person).Error; err != nil {
 		return nil, err
-
 	}
 
 	return person, nil
 }
 
-func ReadPerson(person *Person, db *gorm.DB) (*Person, error) {
-
-	if err := db.First(person).Error; err != nil {
-		return nil, err
-	}
-
-	if err := db.Find(person).Error; err != nil {
-		return nil, err
-	}
-
-	return person, nil
-}
-
-func PatchUpdatePerson(person *Person, db *gorm.DB) (*Person, error) {
+func PatchUpdatePerson(person *Person) (*Person, error) {
 
 	existingPerson := &Person{ID: person.ID}
 
-	if err := db.Find(existingPerson).Error; err != nil { // if id does not exist
+	if err := Db.Find(existingPerson).Error; err != nil { // if id does not exist
 		return nil, err
 	}
 
-	if err := db.Model(existingPerson).Updates(person).Error; err != nil {
+	if err := Db.Model(existingPerson).Updates(person).Error; err != nil {
+
 		logger.Error("err update")
 		return nil, err
+
 	}
 
 	// Return the updated person
@@ -78,9 +88,9 @@ func PatchUpdatePerson(person *Person, db *gorm.DB) (*Person, error) {
 
 }
 
-func ReturnAllQueries(db *gorm.DB) ([]Person, error) {
+func GetUsers() ([]Person, error) {
 	var people []Person // creating person arr
-	if err := db.Find(&people).Error; err != nil {
+	if err := Db.Find(&people).Error; err != nil {
 		//check if err
 		return nil, err
 	}

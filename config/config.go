@@ -1,31 +1,39 @@
 package config
 
 import (
-	"fmt"
 	"go-backend/logger"
 	"os"
 
 	"github.com/joho/godotenv"
 )
 
-var ConfigString string
+type PgDbStruct struct {
+	DbName     string
+	UserName   string
+	DbPassword string
+	DbPort     string
+}
 
-func Init(logLvl uint8) error {
+var PsqlDbConfig PgDbStruct
 
-	logger.LogLevel = logLvl
+func init() {
+
+	logger.LogLevel = 3
 
 	err := godotenv.Load() //load env
 	if err != nil {
-		logger.Fatal("Error loading .env file")
-		return err
+		logger.Error("Error loading .env file")
+		return
 	}
 
-	dbName := os.Getenv("POSTGRES_DB") // getting env vars
-	userName := os.Getenv("POSTGRES_USER")
-	dbPassword := os.Getenv("POSTGRES_PASSWORD")
-	dbPort := os.Getenv("PORT")
+	PsqlDbConfig.DbName = os.Getenv("POSTGRES_DB") // getting env vars
+	PsqlDbConfig.UserName = os.Getenv("POSTGRES_USER")
+	PsqlDbConfig.DbPassword = os.Getenv("POSTGRES_PASSWORD")
+	PsqlDbConfig.DbPort = os.Getenv("PORT")
 
-	ConfigString = fmt.Sprintf("host=localhost user=%s password=%s database=%s port=%s sslmode=disable TimeZone=Etc/UTC", userName, dbPassword, dbName, dbPort)
+	if PsqlDbConfig.DbName == "" || PsqlDbConfig.UserName == "" || PsqlDbConfig.DbPassword == "" || PsqlDbConfig.DbPort == "" {
 
-	return nil
+		logger.Fatal("uninit env val")
+	}
+
 }

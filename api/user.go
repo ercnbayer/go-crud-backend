@@ -1,8 +1,10 @@
 package api
 
 import (
-	"go-backend/db"
+	db "go-backend/db"
 	"go-backend/logger"
+
+	"github.com/google/uuid"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -14,13 +16,21 @@ func getSingleUser(c *fiber.Ctx) error {
 	// Get the ID from the URL parameter
 	id := c.Params("id") // getting id from params
 
-	person := &db.Person{ID: id} // person instance
+	var person = new(db.Person)
+	person.ID = id
+	_, err := uuid.Parse(id)
 
-	person, err := db.ReadPerson(person, db.Db)
+	if err != nil {
+
+		logger.Error("invalid req", err)
+		return c.JSON(c.SendStatus(400), "invalid req")
+	}
+
+	person, err = db.ReadPerson(id)
 	if err != nil { //check if err is not null
 
-		logger.Error(err.Error())
-		return c.JSON(err.Error())
+		logger.Error(err.Error(), err)
+		return c.JSON(c.SendStatus(404), err.Error())
 	}
 
 	return c.JSON(person) // return it as json
@@ -31,15 +41,23 @@ func deleteUser(c *fiber.Ctx) error {
 
 	id := c.Params("id") // getting id from params
 
-	person := &db.Person{ID: id}
-
-	person, err := db.DeletePerson(person, db.Db) // for delete api
+	_, err := uuid.Parse(id)
 
 	if err != nil {
-		return c.JSON(err.Error())
+
+		logger.Error("invalid req", err)
+		return c.JSON(c.SendStatus(400), "invalid req")
+
 	}
 
-	return c.JSON(person)
+	id, err = db.DeletePerson(id) // for delete api
+
+	if err != nil {
+		logger.Error(err.Error())
+		return c.JSON(c.SendStatus(404), "USER NOT FOUND")
+	}
+
+	return c.JSON(id)
 
 }
 
@@ -53,13 +71,13 @@ func updateUser(c *fiber.Ctx) error {
 
 		logger.Error("UPDATE USER error = ", err, person)
 
-		return c.SendStatus(404)
+		return c.JSON(c.SendStatus(404), err.Error())
 	}
 	person.ID = id
-	person, err := db.PatchUpdatePerson(person, db.Db)
+	person, err := db.PatchUpdatePerson(person)
 
 	if err != nil {
-		return c.JSON(err.Error())
+		return c.JSON(c.SendStatus(404), "USER NOT FOUND")
 	}
 
 	return c.JSON(person)
@@ -67,19 +85,19 @@ func updateUser(c *fiber.Ctx) error {
 }
 func createUser(c *fiber.Ctx) error {
 
-	person := new(db.Person)
+	person := &db.Person{}
 
 	if err := c.BodyParser(person); err != nil { //check if err
 		logger.Error(" false request err", err)
-		return c.SendStatus(404)
+		return c.JSON(c.SendStatus(400), "false req")
 	}
 
-	person, err := db.InsertPerson(person, db.Db)
+	person, err := db.InsertPerson(person)
 
 	if err != nil {
 
 		logger.Error(" false request err", err.Error())
-		return c.JSON(err.Error())
+		return c.JSON(c.SendStatus(400), "db err")
 
 	}
 
@@ -88,18 +106,18 @@ func createUser(c *fiber.Ctx) error {
 }
 func listUsers(c *fiber.Ctx) error {
 
-	people, err := db.ReturnAllQueries(db.Db) //list api
+	people, err := db.GetUsers() //list api
 
 	if err != nil {
 
-		logger.Error(" false request err", err.Error())
-		return c.JSON(err)
+		logger.Error(" no user found", err.Error())
+		return c.JSON(c.SendStatus(404), "no user found")
 	}
 
 	return c.JSON(people)
 }
 
-func Init() {
+func init() {
 
 	app := fiber.New()
 
@@ -115,5 +133,9 @@ func Init() {
 
 	userApi.Delete(":id", deleteUser) //delete user
 
-	logger.Fatal(app.Listen(":3000"))
+	err := app.Listen(":3000")
+
+	if err != nil {
+		logger.Fatal("err")
+	}
 }
