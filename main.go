@@ -1,12 +1,13 @@
 package main
 
 import (
-	//_ "go-backend/api"
+	_ "go-backend/api"
 	_ "go-backend/config"
 	_ "go-backend/db"
-	_ "go-backend/migration"
+	//"go-backend/migration"
 )
 
 func main() {
-
+	//migration.Up(db.Db)
+	//migration.Down(db.Db)
 }

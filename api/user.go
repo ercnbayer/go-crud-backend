@@ -122,7 +122,7 @@ func createUser(c *fiber.Ctx) error {
 	if err != nil {
 
 		logger.Error(" false request err", err.Error())
-		return c.JSON(c.SendStatus(400), "db err")
+		return c.JSON(c.SendStatus(404), "user not founderr")
 
 	}
 
