@@ -8,6 +8,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+type Person struct {
+	ID       string
+	Name     string `validate:"required"`
+	Password string `validate:"required"`
+	Email    string `validate:"required"`
+}
+
 func getSingleUser(c *fiber.Ctx) error {
 
 	//getting single user
@@ -15,9 +22,7 @@ func getSingleUser(c *fiber.Ctx) error {
 	// Get the ID from the URL parameter
 	id := c.Params("id") // getting id from params
 
-	var person = new(db.Person)
-	person.ID = id
-	_, err := validator.ValidateID(id)
+	err := validator.ValidateID(id)
 
 	if err != nil {
 
@@ -25,7 +30,11 @@ func getSingleUser(c *fiber.Ctx) error {
 		return c.JSON(c.SendStatus(400), "invalid req")
 	}
 
+	var person = new(db.Person)
+	person.ID = id
+
 	person, err = db.ReadPerson(id)
+
 	if err != nil { //check if err is not null
 
 		logger.Error(err.Error(), err)
@@ -40,7 +49,7 @@ func deleteUser(c *fiber.Ctx) error {
 
 	id := c.Params("id") // getting id from params
 
-	_, err := validator.ValidateID(id)
+	err := validator.ValidateID(id)
 
 	if err != nil {
 
@@ -64,12 +73,12 @@ func updateUser(c *fiber.Ctx) error {
 
 	id := c.Params("id") // getting id again
 
-	_, err := validator.ValidateID(id)
+	err := validator.ValidateID(id)
 
 	if err != nil {
 		return c.JSON(c.SendStatus(400), err.Error())
 	}
-	person := new(db.Person) // creating instance
+	person := new(Person) // creating instance
 
 	if err := c.BodyParser(person); err != nil { // check if err
 
@@ -77,26 +86,38 @@ func updateUser(c *fiber.Ctx) error {
 
 		return c.JSON(c.SendStatus(400), err.Error())
 	}
+
+	if err := validator.ValidateUpdatedStruct(person); err != nil {
+
+		return c.JSON(c.SendStatus(400), err.Error())
+	}
+
 	person.ID = id
-	person, err = db.PatchUpdatePerson(person)
+
+	dbPerson, err := db.PatchUpdatePerson(&db.Person{ID: person.ID, Name: person.Name, Email: person.Email, Password: person.Password})
 
 	if err != nil {
 		return c.JSON(c.SendStatus(404), "USER NOT FOUND")
 	}
 
-	return c.JSON(person)
+	return c.JSON(dbPerson)
 
 }
 func createUser(c *fiber.Ctx) error {
 
-	person := &db.Person{}
+	person := &Person{}
 
 	if err := c.BodyParser(person); err != nil { //check if err
 		logger.Error(" false request err", err)
 		return c.JSON(c.SendStatus(400), "false req")
 	}
 
-	person, err := db.InsertPerson(person)
+	if err := validator.ValidateStruct(person); err != nil { //check if err
+		logger.Error(" false request err", err)
+		return c.JSON(c.SendStatus(400), "false req")
+	}
+
+	dbPerson, err := db.InsertPerson(&db.Person{Name: person.Name, Email: person.Email, Password: person.Password})
 
 	if err != nil {
 
@@ -105,7 +126,7 @@ func createUser(c *fiber.Ctx) error {
 
 	}
 
-	return c.JSON(person)
+	return c.JSON(dbPerson)
 
 }
 func listUsers(c *fiber.Ctx) error {

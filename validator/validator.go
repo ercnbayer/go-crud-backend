@@ -2,12 +2,21 @@ package validator
 
 import (
 	"github.com/go-playground/validator/v10"
-	"github.com/google/uuid"
 )
 
-var Validator = validator.New()
+var validate = validator.New()
 
-func ValidateID(id string) (uuid.UUID, error) {
+func ValidateID(id string) error {
 
-	return uuid.Parse(id)
+	return validate.Var(id, "uuid4")
+}
+
+func ValidateUpdatedStruct(person interface{}) error {
+
+	return validate.StructPartial(person)
+}
+
+func ValidateStruct(person interface{}) error {
+
+	return validate.Struct(person)
 }

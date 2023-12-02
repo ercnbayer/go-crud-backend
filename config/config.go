@@ -16,6 +16,11 @@ type PgDbStruct struct {
 
 var PsqlDbConfig PgDbStruct
 
+func CheckEnvArgs() bool {
+
+	return PsqlDbConfig == PgDbStruct{}
+}
+
 func init() {
 
 	logger.LogLevel = 3
@@ -31,9 +36,9 @@ func init() {
 	PsqlDbConfig.DbPassword = os.Getenv("POSTGRES_PASSWORD")
 	PsqlDbConfig.DbPort = os.Getenv("PORT")
 
-	if PsqlDbConfig.DbName == "" || PsqlDbConfig.UserName == "" || PsqlDbConfig.DbPassword == "" || PsqlDbConfig.DbPort == "" {
+	if CheckEnvArgs() {
 
-		logger.Fatal("uninit env val")
+		logger.Fatal("ENV VALUE EMPTY ")
 	}
 
 }

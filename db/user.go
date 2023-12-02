@@ -2,14 +2,13 @@ package db
 
 import (
 	"go-backend/logger"
-	"go-backend/validator"
 )
 
 type Person struct {
 	ID       string `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
-	Name     string `gorm:"name;not null" validate:"required"`
-	Password string `gorm:"column:password;not null" validate:"required"`
-	Email    string `gorm:"column:email ;not null" validate:"required"`
+	Name     string `gorm:"name;not null"`
+	Password string `gorm:"column:password;not null"`
+	Email    string `gorm:"column:email ;not null"`
 }
 
 // TableName overrides the table name used by User to `profiles`
@@ -18,11 +17,6 @@ func (table *Person) TableName() string {
 }
 
 func InsertPerson(person *Person) (*Person, error) {
-
-	if err := validator.Validator.Struct(person); err != nil {
-
-		return nil, err
-	}
 
 	if err := Db.Save(&person).Error; err != nil {
 		return nil, err
