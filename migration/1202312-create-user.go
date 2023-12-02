@@ -1,7 +1,7 @@
 package migration
 
 import (
-	"go-backend/db"
+	"gorm.io/gorm"
 )
 
 type Person struct {
@@ -15,7 +15,23 @@ func (table *Person) TableName() string {
 	return "persons"
 }
 
-func init() {
+func Up(db *gorm.DB) error {
+	// Use the db.Migrator().CreateTable method to create a new table
+	err := db.Migrator().CreateTable(&Person{})
+	if err != nil {
+		return err
+	}
 
-	db.Db.Set("gorm::table_options", "ENGINE=InnoDB").Migrator().CreateTable(Person{})
+	// Add columns or make other schema changes as needed
+
+	return nil
+}
+
+func Down(db *gorm.DB) error {
+	// Use the db.Migrator().DropTable method to drop the previously created table
+	err := db.Migrator().DropTable(&Person{})
+	if err != nil {
+		return err
+	}
+	return nil
 }

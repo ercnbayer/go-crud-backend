@@ -1,7 +1,12 @@
 # go-crud-backend
+ basic crud operations enchanced with file structures
 
-for running backend
-go run main.go
-
-for running migration
-uncomment migration & comment api library library in main.go
+# usage
+ ```
+ for running backend
+ go run main.go
+ ```
+  ```
+ for running backend
+    uncomment migration & comment api library library in main.go and call up and down functions up to your desire and execute "go run main.go"
+ ```
