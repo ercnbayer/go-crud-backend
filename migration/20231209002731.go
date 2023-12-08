@@ -5,21 +5,19 @@ import (
 	"go-backend/logger"
 )
 
-type D1202312Person struct {
+type Person20231209002731 struct {
 	ID       string `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	Name     string `gorm:"name;not null"`
 	Password string `gorm:"column:password;not null"`
 	Email    string `gorm:"column:email ;not null"`
 }
 
-var entryName string
-
-func (table D1202312Person) TableName() string {
+func (table Person20231209002731) TableName() string {
 	return "persons"
 }
-func D1202312PersonUp() error {
+func PersonUp20231209002731() error {
 	// Use the db.Migrator().CreateTable method to create a new table
-	if err := db.Db.Migrator().CreateTable(&D1202312Person{}); err != nil {
+	if err := db.Db.Migrator().CreateTable(&Person20231209002731{}); err != nil {
 		logger.Info("Table init err")
 		return err
 	}
@@ -31,9 +29,10 @@ func D1202312PersonUp() error {
 	// Add columns or make other schema changes as needed
 	return nil
 }
-func D1202312PersonDown() error {
-	// Use the db.Migrator().DropTable method to drop the previously created table
-	if err := db.Db.Migrator().DropTable(&D1202312Person{}); err != nil {
+
+func PersonDown20231209002731() error {
+
+	if err := db.Db.Migrator().DropTable(&Person20231209002731{}); err != nil {
 		logger.Info("err drop table")
 		return err
 	}
@@ -50,9 +49,9 @@ func D1202312PersonDown() error {
 func init() {
 
 	Migrations_Arr = append(Migrations_Arr, Migrations{
-		Name:   "20231201214530087",
-		UpFn:   D1202312PersonUp,
-		DownFn: D1202312PersonDown,
+		Name:   "Person20231209002731",
+		UpFn:   PersonUp20231209002731,
+		DownFn: PersonDown20231209002731,
 	})
 	logger.Info("TABLE INIT")
 
