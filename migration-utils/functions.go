@@ -29,8 +29,6 @@ func InsertMigration(Name string) error {
 
 func DeleteMigration(Name string) error {
 
-	//You are deleting the migration but you are deleting that from only migration table!!
-	// You are not calling the down method of the migarion
 	err := db.Db.Where("Name=?", Name).Delete(&CommittedMigration{}).Error
 
 	if err != nil {

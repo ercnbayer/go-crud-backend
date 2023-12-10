@@ -3,11 +3,13 @@ package main
 import (
 	//_ "go-backend/api"
 	_ "go-backend/db"
-	"go-backend/migration"
 	_ "go-backend/migration"
+	migrationutils "go-backend/migration-utils"
 	//"go-backend/migration"
 )
 
 func main() {
-	migration.RunDown()
+	//migration.RunUp()
+	//migration.RunDownMigration("Person20231209003351")
+	migrationutils.RunUpMigration("Person20231209002731")
 }

@@ -48,7 +48,7 @@ func PersonDown20231209002731() error {
 
 func init() {
 
-	Migrations_Arr = append(Migrations_Arr, Migrations{
+	Migrations_Arr = append(Migrations_Arr, Migration{
 		Name:   "Person20231209002731",
 		UpFn:   PersonUp20231209002731,
 		DownFn: PersonDown20231209002731,

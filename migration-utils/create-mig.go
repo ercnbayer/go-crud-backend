@@ -36,7 +36,7 @@ func Init() {
 	
 	func init() {
 	
-		Migrations_Arr = append(Migrations_Arr, Migrations{
+		Migrations_Arr = append(Migrations_Arr, Migration{
 			Name:   "Person%s",
 			UpFn:   PersonUp%s,
 			DownFn: PersonDown%s,
