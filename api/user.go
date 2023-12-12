@@ -76,6 +76,7 @@ func updateUser(c *fiber.Ctx) error {
 
 	id := c.Params("id") // getting id again
 
+	//Validate id (endpoint params) by struct (like body validation).
 	err := validator.ValidateID(id)
 
 	if err != nil {
