@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// You can create name this struct like PersonPayload or PersonDTO. Bu PersonPayload is more suitable naming
 type Person struct {
 	ID       string
 	Name     string `validate:"required"`
@@ -22,11 +23,13 @@ func getSingleUser(c *fiber.Ctx) error {
 	// Get the ID from the URL parameter
 	id := c.Params("id") // getting id from params
 
+	//Add this to your validation struct like `validate:"required,uuid4"`
 	err := validator.ValidateID(id)
 
 	if err != nil {
 
 		logger.Error("invalid req", err)
+		//You should return error messages from validation
 		return c.JSON(c.SendStatus(400), "invalid req")
 	}
 
@@ -94,6 +97,7 @@ func updateUser(c *fiber.Ctx) error {
 
 	person.ID = id
 
+	//Dont map api.Person to db.Person like that. You can create seperate function for this purpose. You can creat this function like mapPersonPayloadToPerson(d *api.PersonPaylaod) db.Person { your convertation stuff in here} make this for all function in al layers. You can manage your struct convertions like this by mapping functions
 	dbPerson, err := db.PatchUpdatePerson(&db.Person{ID: person.ID, Name: person.Name, Email: person.Email, Password: person.Password})
 
 	if err != nil {
