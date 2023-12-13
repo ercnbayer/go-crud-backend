@@ -2,52 +2,49 @@ package migrationutils
 
 import (
 	"fmt"
+	"go-backend/logger"
 	"os"
+	"text/template"
 	"time"
 )
 
-func Init() {
+type Migration struct {
+	Name           string
+	Timestamp      string
+	TableName      string
+	SuccessInitLog string
+}
+
+func Init(structName string) {
 
 	timestamp := time.Now().Format("20060102150405")
-	fileName := fmt.Sprintf("%s.go", timestamp)
-	content := fmt.Sprintf(`package migration
+	templateFile := "migration-utils/migration.tmpl"
+	fileName := fmt.Sprintf("migration/%s.go", timestamp)
 
-	import (
-		"go-backend/db"
-		"go-backend/logger"
-	)
-	
-	type  Person%s struct {
+	migrationFile := []Migration{{Name: "person", Timestamp: timestamp, TableName: "persons", SuccessInitLog: "Table Init"}}
 
-	}
-	
-	
-	func (table Person%s) TableName() string {
-		return "persons"
-	}
-	func PersonUp%s() error {
-
-		return nil
-	}
-	func PersonDown%s() error {
-		
-		return nil
-	}
-	
-	func init() {
-	
-		Migrations_Arr = append(Migrations_Arr, Migration{
-			Name:   "Person%s",
-			UpFn:   PersonUp%s,
-			DownFn: PersonDown%s,
-		})
-		logger.Info("TABLE INIT")
-	
-	}
-	`, timestamp, timestamp, timestamp, timestamp, timestamp, timestamp, timestamp)
-	err := os.WriteFile("./migration/"+fileName, []byte(content), 0644)
+	tmpl, err := template.ParseFiles(templateFile)
 	if err != nil {
-		fmt.Println("Error creating file:", err)
-		return
+		//panic(err)
+		logger.Error(err.Error())
 	}
+
+	File, err := os.Create(fileName)
+
+	if err != nil {
+		logger.Error(err)
+	}
+
+	err = tmpl.Execute(File, migrationFile)
+
+	if err != nil {
+
+		File.Close()
+		logger.Error()
+
+	}
+
+	File.Close()
+	// end main
+
 }

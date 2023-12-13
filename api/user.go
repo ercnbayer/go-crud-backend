@@ -8,11 +8,21 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type Person struct {
+type PersonPayload struct {
 	ID       string
 	Name     string `validate:"required"`
 	Password string `validate:"required"`
 	Email    string `validate:"required"`
+}
+
+func mapPersonPayloadToDbPerson(person *PersonPayload) *db.Person {
+
+	return &db.Person{ID: person.ID, Name: person.Name, Email: person.Email, Password: person.Password}
+}
+
+func mapPersonPayloadToDbPersonCreate(person *PersonPayload) *db.Person {
+
+	return &db.Person{Name: person.Name, Email: person.Email, Password: person.Password}
 }
 
 func getSingleUser(c *fiber.Ctx) error {
@@ -27,13 +37,10 @@ func getSingleUser(c *fiber.Ctx) error {
 	if err != nil {
 
 		logger.Error("invalid req", err)
-		return c.JSON(c.SendStatus(400), "invalid req")
+		return c.JSON(c.SendStatus(400), err.Error())
 	}
 
-	var person = new(db.Person)
-	person.ID = id
-
-	person, err = db.ReadPerson(id)
+	person, err := db.ReadPerson(id)
 
 	if err != nil { //check if err is not null
 
@@ -54,15 +61,15 @@ func deleteUser(c *fiber.Ctx) error {
 	if err != nil {
 
 		logger.Error("invalid req", err)
-		return c.JSON(c.SendStatus(400), "invalid req")
+		return c.JSON(c.SendStatus(400), err.Error())
 
 	}
 
-	id, err = db.DeletePerson(id) // for delete api
+	_, err = db.DeletePerson(id) // for delete api
 
 	if err != nil {
 		logger.Error(err.Error())
-		return c.JSON(c.SendStatus(404), "USER NOT FOUND")
+		return c.JSON(c.SendStatus(404), err.Error())
 	}
 
 	return c.JSON(id)
@@ -78,7 +85,8 @@ func updateUser(c *fiber.Ctx) error {
 	if err != nil {
 		return c.JSON(c.SendStatus(400), err.Error())
 	}
-	person := new(Person) // creating instance
+
+	person := new(PersonPayload) // creating instance
 
 	if err := c.BodyParser(person); err != nil { // check if err
 
@@ -94,10 +102,10 @@ func updateUser(c *fiber.Ctx) error {
 
 	person.ID = id
 
-	dbPerson, err := db.PatchUpdatePerson(&db.Person{ID: person.ID, Name: person.Name, Email: person.Email, Password: person.Password})
+	dbPerson, err := db.PatchUpdatePerson(mapPersonPayloadToDbPerson(person))
 
 	if err != nil {
-		return c.JSON(c.SendStatus(404), "USER NOT FOUND")
+		return c.JSON(c.SendStatus(404), err.Error())
 	}
 
 	return c.JSON(dbPerson)
@@ -105,19 +113,19 @@ func updateUser(c *fiber.Ctx) error {
 }
 func createUser(c *fiber.Ctx) error {
 
-	person := &Person{}
+	person := new(PersonPayload)
 
 	if err := c.BodyParser(person); err != nil { //check if err
 		logger.Error(" false request err", err)
-		return c.JSON(c.SendStatus(400), "false req")
+		return c.JSON(c.SendStatus(400), err.Error())
 	}
 
 	if err := validator.ValidateStruct(person); err != nil { //check if err
 		logger.Error(" false request err", err)
-		return c.JSON(c.SendStatus(400), "false req")
+		return c.JSON(c.SendStatus(400), err.Error())
 	}
 
-	dbPerson, err := db.InsertPerson(&db.Person{Name: person.Name, Email: person.Email, Password: person.Password})
+	dbPerson, err := db.InsertPerson(mapPersonPayloadToDbPersonCreate(person))
 
 	if err != nil {
 
@@ -136,7 +144,7 @@ func listUsers(c *fiber.Ctx) error {
 	if err != nil {
 
 		logger.Error(" no user found", err.Error())
-		return c.JSON(c.SendStatus(404), "no user found")
+		return c.JSON(c.SendStatus(404), err.Error())
 	}
 
 	return c.JSON(people)
@@ -161,6 +169,6 @@ func init() {
 	err := app.Listen(":3000")
 
 	if err != nil {
-		logger.Fatal("err")
+		logger.Fatal("err", err)
 	}
 }

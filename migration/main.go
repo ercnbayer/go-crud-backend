@@ -21,6 +21,7 @@ func SortMigArr() {
 		v2 := reflect.ValueOf(Migrations_Arr[j]).FieldByName("Name")
 		return v1.String() < v2.String()
 	})
+
 }
 
 func init() {
