@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// Ypu need to create two seperate payloads for create and update. Before while creation user all fields and required except id but for update they are optional
 type PersonPayload struct {
 	ID       string
 	Name     string `validate:"omitempty,required"`
@@ -57,6 +58,7 @@ func getSingleUser(c *fiber.Ctx) error {
 		return c.Status(404).JSON(err.Error())
 	}
 
+	//Is the status code 200. İf not add it
 	return c.JSON(person) // return it as json
 
 }
@@ -95,6 +97,7 @@ func updateUser(c *fiber.Ctx) error {
 		return c.Status(404).JSON(err.Error())
 	}
 
+	//You can create body parse and validate as one function ->
 	var person PersonPayload // creating instance
 
 	if err := c.BodyParser(&person); err != nil { // check if err
@@ -113,6 +116,7 @@ func updateUser(c *fiber.Ctx) error {
 
 		return c.Status(400).JSON(err.Error())
 	}
+	//-> until there
 
 	mapPersonPayloadToDbPerson(&person, &dbPerson)
 	err = db.PatchUpdatePerson(&dbPerson)
@@ -130,7 +134,7 @@ func createUser(c *fiber.Ctx) error {
 
 	var dbPerson db.Person
 
-	if err := c.BodyParser(&person); err != nil { //check if err
+	if err := c.BodyParser(&person); err != nil { //check if err//Unecessary :D
 		logger.Error(" false request err", err)
 		return c.Status(400).JSON(err.Error())
 	}
