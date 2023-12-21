@@ -5,7 +5,6 @@ import (
 	_ "go-backend/db"
 	_ "go-backend/migration"
 	_ "go-backend/migration-utils"
-	//migrationutils "go-backend/migration-utils"
 )
 
 func main() {

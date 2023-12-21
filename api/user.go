@@ -10,19 +10,25 @@ import (
 
 type PersonPayload struct {
 	ID       string
-	Name     string `validate:"required"`
-	Password string `validate:"required"`
-	Email    string `validate:"required"`
+	Name     string `validate:"omitempty,required"`
+	Password string `validate:"omitempty,required"`
+	Email    string `validate:"omitempty,required,email"`
 }
 
-func mapPersonPayloadToDbPerson(person *PersonPayload) *db.Person {
+func mapPersonPayloadToDbPerson(person *PersonPayload, dbPerson *db.Person) {
 
-	return &db.Person{ID: person.ID, Name: person.Name, Email: person.Email, Password: person.Password}
+	dbPerson.ID = person.ID
+	dbPerson.Name = person.Name
+	dbPerson.Email = person.Email
+	dbPerson.Password = person.Password
 }
 
-func mapPersonPayloadToDbPersonCreate(person *PersonPayload) *db.Person {
+func mapPersonPayloadToDbPersonCreate(person *PersonPayload, dbPerson *db.Person) {
 
-	return &db.Person{Name: person.Name, Email: person.Email, Password: person.Password}
+	dbPerson.Name = person.Name
+	dbPerson.Email = person.Email
+	dbPerson.Password = person.Password
+
 }
 
 func getSingleUser(c *fiber.Ctx) error {
@@ -37,15 +43,18 @@ func getSingleUser(c *fiber.Ctx) error {
 	if err != nil {
 
 		logger.Error("invalid req", err)
-		return c.JSON(c.SendStatus(400), err.Error())
+
+		return c.Status(400).JSON(err.Error())
 	}
 
-	person, err := db.ReadPerson(id)
+	var person db.Person
+	err = db.ReadPerson(id, &person)
 
 	if err != nil { //check if err is not null
 
 		logger.Error(err.Error(), err)
-		return c.JSON(c.SendStatus(404), err.Error())
+
+		return c.Status(404).JSON(err.Error())
 	}
 
 	return c.JSON(person) // return it as json
@@ -61,7 +70,7 @@ func deleteUser(c *fiber.Ctx) error {
 	if err != nil {
 
 		logger.Error("invalid req", err)
-		return c.JSON(c.SendStatus(400), err.Error())
+		return c.Status(400).JSON(err.Error())
 
 	}
 
@@ -69,7 +78,7 @@ func deleteUser(c *fiber.Ctx) error {
 
 	if err != nil {
 		logger.Error(err.Error())
-		return c.JSON(c.SendStatus(404), err.Error())
+		return c.Status(400).JSON(err.Error())
 	}
 
 	return c.JSON(id)
@@ -83,29 +92,33 @@ func updateUser(c *fiber.Ctx) error {
 	err := validator.ValidateID(id)
 
 	if err != nil {
-		return c.JSON(c.SendStatus(400), err.Error())
+		return c.Status(404).JSON(err.Error())
 	}
 
-	person := new(PersonPayload) // creating instance
+	var person PersonPayload // creating instance
 
-	if err := c.BodyParser(person); err != nil { // check if err
+	if err := c.BodyParser(&person); err != nil { // check if err
 
 		logger.Error("UPDATE USER error = ", err, person)
 
-		return c.JSON(c.SendStatus(400), err.Error())
-	}
-
-	if err := validator.ValidateUpdatedStruct(person); err != nil {
-
-		return c.JSON(c.SendStatus(400), err.Error())
+		return c.Status(404).JSON(err.Error())
 	}
 
 	person.ID = id
+	var dbPerson db.Person
 
-	dbPerson, err := db.PatchUpdatePerson(mapPersonPayloadToDbPerson(person))
+	if err := validator.ValidateUpdatedStruct(person); err != nil {
+
+		logger.Error("Validate USER error = ", err, person)
+
+		return c.Status(400).JSON(err.Error())
+	}
+
+	mapPersonPayloadToDbPerson(&person, &dbPerson)
+	err = db.PatchUpdatePerson(&dbPerson)
 
 	if err != nil {
-		return c.JSON(c.SendStatus(404), err.Error())
+		return c.Status(404).JSON(err.Error())
 	}
 
 	return c.JSON(dbPerson)
@@ -113,24 +126,28 @@ func updateUser(c *fiber.Ctx) error {
 }
 func createUser(c *fiber.Ctx) error {
 
-	person := new(PersonPayload)
+	var person PersonPayload
 
-	if err := c.BodyParser(person); err != nil { //check if err
+	var dbPerson db.Person
+
+	if err := c.BodyParser(&person); err != nil { //check if err
 		logger.Error(" false request err", err)
-		return c.JSON(c.SendStatus(400), err.Error())
+		return c.Status(400).JSON(err.Error())
 	}
 
-	if err := validator.ValidateStruct(person); err != nil { //check if err
+	if err := validator.ValidateStruct(&person); err != nil { //check if err
 		logger.Error(" false request err", err)
-		return c.JSON(c.SendStatus(400), err.Error())
+		return c.Status(400).JSON(err.Error())
 	}
 
-	dbPerson, err := db.InsertPerson(mapPersonPayloadToDbPersonCreate(person))
+	mapPersonPayloadToDbPersonCreate(&person, &dbPerson)
+
+	err := db.InsertPerson(&dbPerson)
 
 	if err != nil {
 
 		logger.Error(" false request err", err.Error())
-		return c.JSON(c.SendStatus(404), "user not founderr")
+		return c.Status(404).JSON(err.Error())
 
 	}
 
@@ -144,17 +161,15 @@ func listUsers(c *fiber.Ctx) error {
 	if err != nil {
 
 		logger.Error(" no user found", err.Error())
-		return c.JSON(c.SendStatus(404), err.Error())
+		return c.Status(404).JSON(err.Error())
 	}
 
 	return c.JSON(people)
 }
 
-func init() {
+func UserInit() {
 
-	app := fiber.New()
-
-	userApi := app.Group("/user") // grouping rotues
+	userApi := App.Group("/user") // grouping rotues
 
 	userApi.Post("/", createUser) // creating user
 
@@ -166,9 +181,4 @@ func init() {
 
 	userApi.Delete(":id", deleteUser) //delete user
 
-	err := app.Listen(":3000")
-
-	if err != nil {
-		logger.Fatal("err", err)
-	}
 }

@@ -1,12 +1,13 @@
 package db
 
 import (
+	"errors"
 	"go-backend/logger"
 )
 
 type Person struct {
 	ID       string `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
-	Name     string `gorm:"name;not null"`
+	Name     string `gorm:"column:name;not null"`
 	Password string `gorm:"column:password;not null"`
 	Email    string `gorm:"column:email ;not null"`
 }
@@ -16,66 +17,77 @@ func (table *Person) TableName() string {
 	return "persons"
 }
 
-func InsertPerson(person *Person) (*Person, error) {
+func InsertPerson(person *Person) error {
 
 	if err := Db.Save(&person).Error; err != nil {
-		return nil, err
+		return err
 	}
 
 	logger.Info(person)
 
-	return person, nil
+	return nil
 
 }
 
 func DeletePerson(id string) (string, error) {
 
-	if err := Db.First(&Person{ID: id}).Error; err != nil {
+	var QueryResult = Db.Delete(&Person{ID: id})
+
+	if err := QueryResult.Error; err != nil {
+
+		logger.Info("delete ", err)
 		return id, err
+
 	}
+	if QueryResult.RowsAffected == 0 {
 
-	if err := Db.Delete(&Person{ID: id}).Error; err != nil {
+		logger.Info("USER IS NOT FOUND")
 
-		return id, err
-
+		return id, errors.New("user NOT FOUND")
 	}
 
 	return id, nil
 }
 
-func ReadPerson(id string) (*Person, error) {
+func ReadPerson(id string, person *Person) error {
 
-	if err := Db.First(&Person{ID: id}).Error; err != nil {
-		return nil, err
-	}
+	/*if err := Db.First(&Person{ID: id}).Error; err != nil {
+		return err
+	}*/
 
-	var person = new(Person)
 	person.ID = id
 
-	if err := Db.Find(person).Error; err != nil {
-		return nil, err
+	if err := Db.First(person).Error; err != nil {
+		return err
 	}
 
-	return person, nil
+	return nil
 }
 
-func PatchUpdatePerson(person *Person) (*Person, error) {
+func PatchUpdatePerson(person *Person) error {
 
-	existingPerson := &Person{ID: person.ID}
+	var Result = Db.Updates(person)
+	if err := Result.Error; err != nil {
 
-	if err := Db.Find(existingPerson).Error; err != nil { // if id does not exist
-		return nil, err
+		logger.Error("err update", err)
+		return err
+
+	}
+	//Result = Result.Save(person)
+	if err := Result.Error; err != nil {
+
+		logger.Error("ERR UPDATE:", err)
+		return err
 	}
 
-	if err := Db.Model(existingPerson).Updates(person).Error; err != nil {
+	if Result.RowsAffected == 0 {
+		logger.Error("err user not found")
 
-		logger.Error("err update")
-		return nil, err
-
+		return errors.New("user NOT FOUND")
 	}
 
 	// Return the updated person
-	return existingPerson, nil
+	return nil
 
 }
 

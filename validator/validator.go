@@ -1,22 +1,28 @@
 package validator
 
 import (
+	"go-backend/logger"
+
 	"github.com/go-playground/validator/v10"
 )
 
-var validate = validator.New()
+var Validate = validator.New()
 
 func ValidateID(id string) error {
 
-	return validate.Var(id, "uuid4")
+	return Validate.Var(id, "uuid4")
 }
 
 func ValidateUpdatedStruct(person interface{}) error {
 
-	return validate.StructPartial(person)
+	logger.Info("validating partial")
+
+	return Validate.StructExcept(person)
+
 }
 
 func ValidateStruct(person interface{}) error {
 
-	return validate.Struct(person)
+	logger.Info("validating normal")
+	return Validate.Struct(person)
 }

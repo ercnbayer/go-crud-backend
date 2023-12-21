@@ -18,7 +18,7 @@ var PsqlDbConfig PgDbStruct
 
 func CheckEnvArgs() bool {
 
-	return PsqlDbConfig == PgDbStruct{}
+	return PsqlDbConfig.DbName == "" || PsqlDbConfig.DbPassword == "" || PsqlDbConfig.UserName == "" || PsqlDbConfig.DbPort == ""
 }
 
 func init() {
